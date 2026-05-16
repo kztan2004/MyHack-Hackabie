@@ -67,13 +67,13 @@ export const api = {
     return request<Match[]>("/matches/generate", { method: "POST" });
   },
   linkCompanyProgram(payload: CompanyProgramPayload) {
-    return request<{ status: string }>("/relationships/company-program", {
+    return request<Profile>("/relationships/company-program", {
       method: "POST",
       body: JSON.stringify(payload)
     });
   },
   linkParticipantProgram(payload: ParticipantProgramPayload) {
-    return request<{ status: string }>("/relationships/participant-program", {
+    return request<Profile>("/relationships/participant-program", {
       method: "POST",
       body: JSON.stringify(payload)
     });

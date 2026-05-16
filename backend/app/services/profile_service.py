@@ -57,8 +57,14 @@ class ProfileAIService:
         self.embedding_service = embedding_service
 
     async def enrich(self, name: str, raw_bio: str, available_skills: list[str] | None = None) -> tuple[str, list[str], list[float]]:
-        skills = await self.skill_service.extract(name, raw_bio, available_skills)
-        short_bio = await self.short_bio_service.compress(name, raw_bio)
+        import asyncio
+        
+        # Parallelize the two LLM steps to save time
+        skills_task = self.skill_service.extract(name, raw_bio, available_skills)
+        bio_task = self.short_bio_service.compress(name, raw_bio)
+        
+        skills, short_bio = await asyncio.gather(skills_task, bio_task)
+        
         embedding_text = " ".join([short_bio, *skills])
         embedding = await self.embedding_service.embed(embedding_text)
         return short_bio, skills, embedding

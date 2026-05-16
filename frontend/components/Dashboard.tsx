@@ -5,7 +5,7 @@ import type { EntityKind } from "@/lib/types";
 import { EntityWorkspace } from "@/components/EntityWorkspace";
 import { GraphCanvas } from "@/components/GraphCanvas";
 import { MatchesPanel } from "@/components/MatchesPanel";
-import { RelationshipsPanel } from "@/components/RelationshipsPanel";
+import { LinkagesPanel } from "@/components/RelationshipsPanel";
 
 const statConfig: Array<{ kind: EntityKind; label: string; icon: typeof Handshake; color: string }> = [
   { kind: "mentor", label: "Mentors", icon: Handshake, color: "text-pine" },
@@ -39,7 +39,7 @@ export function Dashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-ink">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-500">Programmable ecosystem relationships</p>
+        <p className="mt-1 text-sm text-slate-500">Programmable ecosystem linkages</p>
       </div>
       <div className="grid gap-3 md:grid-cols-4">
         {statConfig.map((item) => {
@@ -55,12 +55,9 @@ export function Dashboard() {
           );
         })}
       </div>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_430px]">
-        <GraphCanvas compact />
-        <MatchesPanel compact />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)]">
+        <GraphCanvas />
       </div>
-      <RelationshipsPanel />
-      <EntityWorkspace kind="mentor" />
     </div>
   );
 }

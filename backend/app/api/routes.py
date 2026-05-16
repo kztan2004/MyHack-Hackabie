@@ -128,32 +128,70 @@ async def list_programs(repository: EcosystemRepository = Depends(get_repository
 async def link_company_program(
     payload: CompanyProgramLink,
     repository: EcosystemRepository = Depends(get_repository),
+    profile_ai: ProfileAIService = Depends(get_profile_ai_service),
     graph: Neo4jService | None = Depends(get_graph_service),
     embedding_service: EmbeddingService = Depends(get_embedding_service),
-) -> dict[str, str]:
+) -> ProfileRead:
     linked = await repository.link_company_program(payload.company_id, payload.program_id)
     if not linked:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company or program not found")
     if graph:
         await graph.link_company_program(payload.company_id, payload.program_id)
+    
+    # AI Enrichment: Update company profile based on program context
+    company = await repository.get_profile("company", payload.company_id)
+    program = await repository.get_profile("program", payload.program_id)
+    if company and program:
+        combined_bio = f"{company.raw_bio}\n\n[Context]: Participating in program: {program.name}. {program.raw_bio}"
+        available_skills = await repository.get_all_skill_names()
+        short_bio, skills, embedding = await profile_ai.enrich(company.name, combined_bio, available_skills)
+        await repository.update_profile_ai_fields("company", company.id, short_bio, skills, embedding)
+        if graph:
+            await graph.upsert_profile("company", company.id, company.name, short_bio, skills)
+        company = await repository.get_profile("company", payload.company_id)
+
     await MatchingService(repository, embedding_service, graph).generate()
-    return {"status": "linked"}
+    return await _profile_response("company", company, repository)
 
 
 @router.post("/relationships/participant-program", dependencies=[Depends(require_auth)])
 async def link_participant_program(
     payload: ParticipantProgramLink,
     repository: EcosystemRepository = Depends(get_repository),
+    profile_ai: ProfileAIService = Depends(get_profile_ai_service),
     graph: Neo4jService | None = Depends(get_graph_service),
     embedding_service: EmbeddingService = Depends(get_embedding_service),
-) -> dict[str, str]:
+) -> ProfileRead:
+    # 1. Establish the basic link
     linked = await repository.link_participant_program(payload.participant_id, payload.program_id)
     if not linked:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Participant or program not found")
+    
+    # 2. AI Enrichment: Update participant profile based on program context
+    participant = await repository.get_profile("participant", payload.participant_id)
+    program = await repository.get_profile("program", payload.program_id)
+    
+    if participant and program:
+        # Create a combined context for the AI
+        combined_bio = f"{participant.raw_bio}\n\n[Activity]: Joined the program: {program.name}. {program.raw_bio}"
+        available_skills = await repository.get_all_skill_names()
+        
+        # Re-enrich the participant
+        short_bio, skills, embedding = await profile_ai.enrich(participant.name, combined_bio, available_skills)
+        
+        # Update the participant in DB
+        await repository.update_profile_ai_fields("participant", participant.id, short_bio, skills, embedding)
+        
+        # Update the graph profile
+        if graph:
+            await graph.upsert_profile("participant", participant.id, participant.name, short_bio, skills)
+
+    # 3. Graph link and matching
     if graph:
         await graph.link_participant_program(payload.participant_id, payload.program_id)
+    
     await MatchingService(repository, embedding_service, graph).generate()
-    return {"status": "linked"}
+    return await _profile_response("participant", participant, repository)
 
 
 @router.get("/matches", response_model=list[MatchRead], dependencies=[Depends(require_auth)])

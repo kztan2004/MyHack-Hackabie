@@ -2,8 +2,10 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link2, RefreshCw } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Profile } from "@/lib/types";
+import { ProfileCard } from "./ProfileCard";
+import { Sparkles } from "lucide-react";
 
-export function RelationshipsPanel() {
+export function LinkagesPanel() {
   const [companies, setCompanies] = useState<Profile[]>([]);
   const [participants, setParticipants] = useState<Profile[]>([]);
   const [programs, setPrograms] = useState<Profile[]>([]);
@@ -14,6 +16,7 @@ export function RelationshipsPanel() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [enhancedProfile, setEnhancedProfile] = useState<Profile | null>(null);
 
   async function load() {
     setError("");
@@ -28,7 +31,7 @@ export function RelationshipsPanel() {
   }
 
   useEffect(() => {
-    load().catch((err: unknown) => setError(err instanceof Error ? err.message : "Unable to load relationships"));
+    load().catch((err: unknown) => setError(err instanceof Error ? err.message : "Unable to load linkages"));
   }, []);
 
   async function submitCompanyProgram(event: FormEvent<HTMLFormElement>) {
@@ -37,8 +40,9 @@ export function RelationshipsPanel() {
     setStatus("");
     setError("");
     try {
-      await api.linkCompanyProgram({ company_id: companyId, program_id: companyProgramId });
-      setStatus("Company linked to program");
+      const profile = await api.linkCompanyProgram({ company_id: companyId, program_id: companyProgramId });
+      setStatus(`${profile.name} linked and bio enriched!`);
+      setEnhancedProfile(profile);
       setCompanyProgramId("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to link company and program");
@@ -53,8 +57,9 @@ export function RelationshipsPanel() {
     setStatus("");
     setError("");
     try {
-      await api.linkParticipantProgram({ participant_id: participantId, program_id: participantProgramId });
-      setStatus("Participant linked to program");
+      const profile = await api.linkParticipantProgram({ participant_id: participantId, program_id: participantProgramId });
+      setStatus(`${profile.name} linked and skills re-extracted!`);
+      setEnhancedProfile(profile);
       setParticipantProgramId("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to link participant and program");
@@ -67,8 +72,8 @@ export function RelationshipsPanel() {
     <section>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-ink">Relationships</h1>
-          <p className="mt-1 text-sm text-slate-500">Program enrollment and participation</p>
+          <h1 className="text-xl font-semibold text-ink">Linkages</h1>
+          <p className="mt-1 text-sm text-slate-500">Program enrollment and ecosystem connections</p>
         </div>
         <button
           type="button"
@@ -80,9 +85,24 @@ export function RelationshipsPanel() {
         </button>
       </div>
       {error ? <div className="mb-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
-      {status ? <div className="mb-3 rounded-md bg-emerald-50 p-3 text-sm text-pine">{status}</div> : null}
+      {status ? (
+        <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="mb-3 rounded-md bg-emerald-50 p-3 text-sm font-medium text-pine">
+            {status}
+          </div>
+          {enhancedProfile && (
+            <div className="rounded-lg border-2 border-pine/30 bg-white p-1">
+              <div className="flex items-center gap-2 p-3 text-xs font-bold uppercase tracking-wider text-pine">
+                <Sparkles size={14} className="animate-pulse" />
+                Newly Enhanced AI Profile
+              </div>
+              <ProfileCard profile={enhancedProfile} highlight />
+            </div>
+          )}
+        </div>
+      ) : null}
       <div className="grid gap-3 md:grid-cols-2">
-        <RelationshipForm
+        <LinkageForm
           title="Company program"
           leftLabel="Company"
           leftValue={companyId}
@@ -95,7 +115,7 @@ export function RelationshipsPanel() {
           onSubmit={submitCompanyProgram}
           loading={loading}
         />
-        <RelationshipForm
+        <LinkageForm
           title="Participant program"
           leftLabel="Participant"
           leftValue={participantId}
@@ -107,13 +127,14 @@ export function RelationshipsPanel() {
           onRightChange={setParticipantProgramId}
           onSubmit={submitParticipantProgram}
           loading={loading}
+          buttonLabel="Join Program"
         />
       </div>
     </section>
   );
 }
 
-type RelationshipFormProps = {
+type LinkageFormProps = {
   title: string;
   leftLabel: string;
   leftValue: string;
@@ -125,9 +146,10 @@ type RelationshipFormProps = {
   onRightChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   loading: boolean;
+  buttonLabel?: string;
 };
 
-function RelationshipForm({
+function LinkageForm({
   title,
   leftLabel,
   leftValue,
@@ -138,8 +160,9 @@ function RelationshipForm({
   rightOptions,
   onRightChange,
   onSubmit,
-  loading
-}: RelationshipFormProps) {
+  loading,
+  buttonLabel = "Link"
+}: LinkageFormProps) {
   const disabled = loading || !leftValue || !rightValue;
 
   return (
@@ -184,7 +207,7 @@ function RelationshipForm({
         className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-ink px-4 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
       >
         <Link2 size={17} />
-        Link
+        {loading ? "Processing..." : buttonLabel}
       </button>
     </form>
   );

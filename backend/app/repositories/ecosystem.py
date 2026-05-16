@@ -48,6 +48,26 @@ class EcosystemRepository:
         await self.session.refresh(instance)
         return instance
 
+    async def update_profile_ai_fields(
+        self,
+        entity_type: str,
+        entity_id: UUID,
+        short_bio: str,
+        skills: list[str],
+        embedding: list[float],
+    ) -> Any | None:
+        model = PROFILE_MODELS[entity_type]
+        instance = await self.session.get(model, entity_id)
+        if not instance:
+            return None
+        
+        instance.short_bio = short_bio
+        instance.embedding = embedding
+        await self.replace_skills(entity_type, entity_id, skills)
+        await self.session.commit()
+        await self.session.refresh(instance)
+        return instance
+
     async def list_profiles(self, entity_type: str) -> list[Any]:
         model = PROFILE_MODELS[entity_type]
         result = await self.session.execute(select(model).order_by(model.created_at.desc()))
