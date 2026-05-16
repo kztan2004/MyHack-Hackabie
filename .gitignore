@@ -1,0 +1,96 @@
+# ============================================================
+# Environment & Secrets
+# ============================================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ============================================================
+# Python / FastAPI (Backend)
+# ============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.log
+
+# MyPy / type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ============================================================
+# Node / Vite / React (Frontend)
+# ============================================================
+node_modules/
+dist/
+.vite/
+*.local
+
+# Package manager locks (keep package-lock.json or yarn.lock, not both)
+yarn.lock
+
+# Build output
+frontend/dist/
+frontend/build/
+
+# ============================================================
+# Docker
+# ============================================================
+# Ignore local override files but keep the main compose file
+docker-compose.override.yml
+*.dockerignore
+
+# ============================================================
+# Database volumes & data
+# ============================================================
+# Neo4j local data
+neo4j/data/
+neo4j/logs/
+neo4j/import/
+neo4j/plugins/
+
+# PostgreSQL local data
+pgdata/
+postgres_data/
+
+# ============================================================
+# IDE & Editor
+# ============================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============================================================
+# Misc
+# ============================================================
+*.bak
+*.tmp
+.cache/
