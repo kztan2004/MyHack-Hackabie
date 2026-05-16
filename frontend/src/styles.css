@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #eef2f6;
+  color: #17212b;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.node-shadow {
+  filter: drop-shadow(0 8px 16px rgba(23, 33, 43, 0.14));
+}
