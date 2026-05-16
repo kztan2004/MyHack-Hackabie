@@ -1,23 +1,39 @@
-import hashlib
-import math
-import re
+import numpy as np
+from app.core.config import Settings
 
 
 class EmbeddingService:
-    def embed(self, text: str, dimensions: int = 128) -> list[float]:
-        vector = [0.0] * dimensions
-        tokens = re.findall(r"[a-zA-Z0-9+#.]+", text.lower())
-        for token in tokens:
-            digest = hashlib.sha256(token.encode("utf-8")).digest()
-            index = int.from_bytes(digest[:2], "big") % dimensions
-            sign = 1 if digest[2] % 2 == 0 else -1
-            vector[index] += sign
-        norm = math.sqrt(sum(value * value for value in vector))
-        if norm == 0:
-            return vector
-        return [round(value / norm, 6) for value in vector]
+    def __init__(self, settings: Settings):
+        self.settings = settings
+
+    async def embed(self, text: str) -> list[float]:
+        if not self.settings.gemini_api_key:
+            # Fallback to zero vector if no key
+            return [0.0] * 768
+
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=self.settings.gemini_api_key)
+        response = client.models.embed_content(
+            model="gemini-embedding-001",
+            contents=text,
+            config=types.EmbedContentConfig(task_type="SEMANTIC_SIMILARITY"),
+        )
+        return response.embeddings[0].values
 
     def cosine(self, left: list[float] | None, right: list[float] | None) -> float:
         if not left or not right or len(left) != len(right):
             return 0.0
-        return max(0.0, min(1.0, sum(a * b for a, b in zip(left, right, strict=True))))
+        
+        vec1 = np.array(left)
+        vec2 = np.array(right)
+        
+        norm1 = np.linalg.norm(vec1)
+        norm2 = np.linalg.norm(vec2)
+        
+        if norm1 == 0 or norm2 == 0:
+            return 0.0
+            
+        similarity = np.dot(vec1, vec2) / (norm1 * norm2)
+        return float(max(0.0, min(1.0, similarity)))

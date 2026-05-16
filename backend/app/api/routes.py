@@ -66,7 +66,8 @@ async def create_participant(
     graph: Neo4jService | None = Depends(get_graph_service),
     embedding_service: EmbeddingService = Depends(get_embedding_service),
 ) -> ParticipantRead:
-    short_bio, skills, embedding = await profile_ai.enrich(payload.name, payload.raw_bio)
+    available_skills = await repository.get_all_skill_names()
+    short_bio, skills, embedding = await profile_ai.enrich(payload.name, payload.raw_bio, available_skills)
     profile = await repository.create_profile(
         "participant",
         payload.name,
@@ -208,7 +209,8 @@ async def _create_profile(
     profile_ai: ProfileAIService,
     graph: Neo4jService | None,
 ):
-    short_bio, skills, embedding = await profile_ai.enrich(payload.name, payload.raw_bio)
+    available_skills = await repository.get_all_skill_names()
+    short_bio, skills, embedding = await profile_ai.enrich(payload.name, payload.raw_bio, available_skills)
     profile = await repository.create_profile(entity_type, payload.name, payload.raw_bio, short_bio, skills, embedding)
     if graph:
         await graph.upsert_profile(entity_type, profile.id, profile.name, profile.short_bio, skills)

@@ -67,6 +67,11 @@ class EcosystemRepository:
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
+    async def get_all_skill_names(self) -> list[str]:
+        stmt = select(Skill.name).order_by(Skill.name)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
     async def replace_skills(self, entity_type: str, entity_id: UUID, skills: list[str]) -> None:
         await self.session.execute(
             delete(ProfileSkill).where(ProfileSkill.entity_type == entity_type, ProfileSkill.entity_id == entity_id)

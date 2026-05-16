@@ -20,10 +20,14 @@ class GeminiService:
     def __init__(self, settings: Settings):
         self.settings = settings
 
-    async def extract_skills(self, name: str, raw_bio: str) -> list[str]:
+    async def extract_skills(self, name: str, raw_bio: str, available_skills: list[str] | None = None) -> list[str]:
         if not self.settings.gemini_api_key:
             return self._local_explicit_skill_extraction(raw_bio)
-        payload = await self._generate_json(SKILL_EXTRACTION_SYSTEM_PROMPT, self._profile_payload(name, raw_bio))
+
+        skills_list = ", ".join(available_skills) if available_skills else "None yet."
+        system_prompt = SKILL_EXTRACTION_SYSTEM_PROMPT.format(available_skills=skills_list)
+
+        payload = await self._generate_json(system_prompt, self._profile_payload(name, raw_bio))
         try:
             parsed = SkillExtractionResult.model_validate(payload)
         except ValidationError:
@@ -39,6 +43,33 @@ class GeminiService:
         except ValidationError:
             return self._local_short_bio(raw_bio)
         return self._trim_words(parsed.short_bio, 30)
+
+    async def generate_matching_reason(self, source_text: str, target_text: str, score: float) -> str:
+        if not self.settings.gemini_api_key:
+            return "Professional relevance detected based on shared skills and profile alignment."
+
+        prompt = f"""
+        You are an ecosystem programme matching assistant.
+
+        Source Profile/Description:
+        {source_text}
+
+        Target Profile/Description:
+        {target_text}
+
+        Similarity Score:
+        {score:.2f}
+
+        Explain in 1 short sentence why this match is relevant for professional growth and workforce development.
+        """
+
+        from google import genai
+        client = genai.Client(api_key=self.settings.gemini_api_key)
+        response = client.models.generate_content(
+            model=self.settings.gemini_model,
+            contents=prompt
+        )
+        return (response.text or "").strip()
 
     async def _generate_json(self, system_prompt: str, user_payload: str) -> dict[str, Any]:
         from google import genai
