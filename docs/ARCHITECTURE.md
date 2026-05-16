@@ -1,6 +1,6 @@
 # Architecture
 
-EcosystemGraph AI is organized around reusable relationship intelligence rather than directory-style records.
+MYRantai is organized around reusable relationship intelligence rather than directory-style records.
 
 ## Profile Enrichment
 

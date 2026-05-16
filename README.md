@@ -1,4 +1,4 @@
-# EcosystemGraph AI
+# MYRantai
 
 AI-native ecosystem relationship intelligence for mentors, companies, participants, programs, skills, and reusable graph relationships.
 

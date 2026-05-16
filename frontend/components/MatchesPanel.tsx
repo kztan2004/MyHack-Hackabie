@@ -254,7 +254,7 @@ function MatchRow({ match }: { match: Match }) {
         </ul>
         <div className="font-semibold text-pine">{Math.round(match.score * 100)}%</div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap gap-2 px-1">
         {match.shared_skills.map((skill) => (
           <span key={skill} className="rounded bg-amber-50 px-2 py-1 text-xs font-medium text-saffron">
             {skill}

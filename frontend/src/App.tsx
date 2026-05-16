@@ -4,6 +4,7 @@ import { Dashboard } from "@/components/Dashboard";
 import { EntityWorkspace } from "@/components/EntityWorkspace";
 import { GraphCanvas } from "@/components/GraphCanvas";
 import { MatchesPanel } from "@/components/MatchesPanel";
+import { LinkagesPanel } from "@/components/RelationshipsPanel";
 
 const routes = {
   "/": <Dashboard />,
@@ -11,6 +12,7 @@ const routes = {
   "/companies": <EntityWorkspace kind="company" />,
   "/participants": <EntityWorkspace kind="participant" />,
   "/programs": <EntityWorkspace kind="program" />,
+  "/relationships": <LinkagesPanel />,
   "/matches": <MatchesPanel />,
   "/graph": <GraphCanvas />
 };
