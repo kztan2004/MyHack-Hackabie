@@ -32,19 +32,29 @@ class MatchingService:
         self.graph_service = graph_service
 
     async def generate(self) -> list[MatchCandidate]:
+        import asyncio
+
         mentors = await self.repository.list_mentors_with_skills()
         companies = await self.repository.list_companies_with_skills()
         participants = await self.repository.list_participants_with_skills()
         programs = await self.repository.list_programs_with_skills()
 
-        candidates: list[MatchCandidate] = []
+        tasks = []
         for company in companies:
-            candidates.extend(self._company_mentor_matches(company, mentors))
-            candidates.extend(self._company_program_matches(company, programs))
+            for mentor in mentors:
+                tasks.append(self._score("company_mentor", company, "company", mentor, "mentor", "Startup company needs a mentor whose skills can guide business growth."))
+            for program in programs:
+                tasks.append(self._score("company_program", company, "company", program, "program", "Company can use this program to grow participant skills.", bonus=self._linked_program_bonus(company, program)))
+
         for program in programs:
-            candidates.extend(self._program_company_matches(program, companies))
+            for company in companies:
+                tasks.append(self._score("program_company", program, "program", company, "company", "Program can recruit companies whose teams match its focus areas.", bonus=self._linked_program_bonus(company, program)))
+
         for participant in participants:
-            candidates.extend(self._participant_program_matches(participant, programs))
+            for program in programs:
+                tasks.append(self._score("participant_program", participant, "participant", program, "program", "Participant can join this program to improve relevant professional skills."))
+
+        candidates: list[MatchCandidate] = await asyncio.gather(*tasks)
 
         saved_matches = []
         for candidate in candidates:
@@ -72,63 +82,7 @@ class MatchingService:
                 )
         return sorted(saved_matches, key=lambda item: item.score, reverse=True)
 
-    def _company_mentor_matches(self, company: dict, mentors: list[dict]) -> list[MatchCandidate]:
-        return [
-            self._score(
-                "company_mentor",
-                company,
-                "company",
-                mentor,
-                "mentor",
-                "Startup company needs a mentor whose skills can guide business growth.",
-                program_bonus=0.0,
-            )
-            for mentor in mentors
-        ]
-
-    def _company_program_matches(self, company: dict, programs: list[dict]) -> list[MatchCandidate]:
-        return [
-            self._score(
-                "company_program",
-                company,
-                "company",
-                program,
-                "program",
-                "Company can use this program to grow participant skills.",
-                program_bonus=self._linked_program_bonus(company, program),
-            )
-            for program in programs
-        ]
-
-    def _program_company_matches(self, program: dict, companies: list[dict]) -> list[MatchCandidate]:
-        return [
-            self._score(
-                "program_company",
-                program,
-                "program",
-                company,
-                "company",
-                "Program can recruit companies whose teams match its focus areas.",
-                program_bonus=self._linked_program_bonus(company, program),
-            )
-            for company in companies
-        ]
-
-    def _participant_program_matches(self, participant: dict, programs: list[dict]) -> list[MatchCandidate]:
-        return [
-            self._score(
-                "participant_program",
-                participant,
-                "participant",
-                program,
-                "program",
-                "Participant can join this program to improve relevant professional skills.",
-                program_bonus=0.0,
-            )
-            for program in programs
-        ]
-
-    def _score(
+    async def _score(
         self,
         match_type: str,
         source: dict,
@@ -136,12 +90,13 @@ class MatchingService:
         target: dict,
         target_type: str,
         story: str,
-        program_bonus: float,
+        bonus: float = 0.0,
     ) -> MatchCandidate:
         source_profile = source["profile"]
         target_profile = target["profile"]
         source_skills = source["normalized_skills"]
         target_skills = target["normalized_skills"]
+
         shared_normalized = source_skills.intersection(target_skills)
         shared_skills = [
             skill for skill in source["skills"] if self.repository.skill_service.normalize(skill) in shared_normalized
@@ -150,7 +105,32 @@ class MatchingService:
         skill_union = source_skills.union(target_skills)
         skill_overlap = len(shared_normalized) / len(skill_union) if skill_union else 0.0
         semantic = self.embedding_service.cosine(source_profile.embedding, target_profile.embedding)
-        score = (0.45 * skill_overlap) + (0.4 * semantic) + (0.15 * program_bonus)
+        
+        # If no explicit skill overlap exists, zero out the semantic score to prevent hallucinated matches
+        if skill_overlap == 0:
+            semantic = 0.0
+
+        # 50% Skill Overlap + 50% Semantic Similarity (plus existing relationship bonus)
+        base_score = (0.5 * skill_overlap) + (0.5 * semantic)
+        score = base_score + (0.15 * bonus)
+
+        explanation = [story]
+        if shared_skills:
+            explanation.append("Shared explicit skills: " + ", ".join(shared_skills[:5]))
+
+        # AI Reason generation for high-confidence matches (>= 0.75)
+        if score >= 0.75:
+            gemini = self.repository.skill_service.gemini
+            ai_reason = await gemini.generate_matching_reason(
+                source_profile.short_bio or source_profile.raw_bio,
+                target_profile.short_bio or target_profile.raw_bio,
+                score
+            )
+            if ai_reason:
+                explanation.append(f"AI Insight: {ai_reason}")
+
+        if bonus > 0:
+            explanation.append("Existing relationship increases match confidence.")
 
         return MatchCandidate(
             match_type=match_type,
@@ -162,20 +142,8 @@ class MatchingService:
             target_name=target_profile.name,
             score=round(score, 4),
             shared_skills=shared_skills,
-            explanation=self._explain(story, shared_skills, semantic, program_bonus),
+            explanation=explanation,
         )
 
     def _linked_program_bonus(self, company: dict, program: dict) -> float:
         return 1.0 if program["profile"].id in company.get("program_ids", []) else 0.0
-
-    def _explain(self, story: str, shared_skills: list[str], semantic: float, program_bonus: float) -> list[str]:
-        explanation = [story]
-        if shared_skills:
-            explanation.append("Shared explicit skills: " + ", ".join(shared_skills[:5]))
-        if semantic >= 0.35:
-            explanation.append("Profile summaries and skill text show semantic alignment.")
-        if program_bonus > 0:
-            explanation.append("Existing company-program relationship increases confidence.")
-        if len(explanation) == 1:
-            explanation.append("Low-confidence match generated from limited explicit overlap.")
-        return explanation

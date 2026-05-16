@@ -8,8 +8,8 @@ class SkillExtractionService:
     def __init__(self, gemini: GeminiService):
         self.gemini = gemini
 
-    async def extract(self, name: str, raw_bio: str) -> list[str]:
-        candidate_tags = await self.gemini.extract_skills(name, raw_bio)
+    async def extract(self, name: str, raw_bio: str, available_skills: list[str] | None = None) -> list[str]:
+        candidate_tags = await self.gemini.extract_skills(name, raw_bio, available_skills)
         supported = [tag for tag in candidate_tags if self._is_supported(tag, raw_bio)]
         return self._dedupe(supported)[:10]
 
@@ -56,9 +56,9 @@ class ProfileAIService:
         self.short_bio_service = short_bio_service
         self.embedding_service = embedding_service
 
-    async def enrich(self, name: str, raw_bio: str) -> tuple[str, list[str], list[float]]:
-        skills = await self.skill_service.extract(name, raw_bio)
+    async def enrich(self, name: str, raw_bio: str, available_skills: list[str] | None = None) -> tuple[str, list[str], list[float]]:
+        skills = await self.skill_service.extract(name, raw_bio, available_skills)
         short_bio = await self.short_bio_service.compress(name, raw_bio)
         embedding_text = " ".join([short_bio, *skills])
-        embedding = self.embedding_service.embed(embedding_text)
+        embedding = await self.embedding_service.embed(embedding_text)
         return short_bio, skills, embedding

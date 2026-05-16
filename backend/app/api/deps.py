@@ -24,8 +24,8 @@ def get_short_bio_service(gemini: GeminiService = Depends(get_gemini)) -> ShortB
     return ShortBioService(gemini)
 
 
-def get_embedding_service() -> EmbeddingService:
-    return EmbeddingService()
+def get_embedding_service(settings: Settings = Depends(get_settings)) -> EmbeddingService:
+    return EmbeddingService(settings)
 
 
 def get_profile_ai_service(
