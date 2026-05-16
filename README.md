@@ -1,8 +1,8 @@
 # MYRantai
 
-AI-native ecosystem relationship intelligence for mentors, companies, participants, programs, skills, and reusable graph relationships.
+AI-native ecosystem linkage intelligence for mentors, companies, participants, programs, skills, and reusable graph linkages.
 
-This MVP treats relationships as first-class programmable entities:
+This MVP treats linkages as first-class programmable entities:
 
 - Company-to-mentor matching for startup growth guidance
 - Company-to-program matching so companies can find programs that grow participant skills
@@ -57,7 +57,7 @@ Default local auth is disabled with `DISABLE_AUTH=true`. For production-like aut
 2. Backend sends the profile bio through Gemini using strict extraction prompts.
 3. AI returns a short bio and explicit professional skill tags only.
 4. PostgreSQL stores the profile, skills, embeddings, and matches.
-5. Neo4j stores graph nodes and relationships.
+5. Neo4j stores graph nodes and linkages.
 6. Matching engine recomputes ecosystem recommendations across company-mentor, company-program, program-company, and participant-program paths.
 
 ## Matching Formula
@@ -68,9 +68,9 @@ Every match is scored from 0 to 1:
 
 - 45% exact normalized skill overlap
 - 40% embedding similarity over short bio plus skills
-- 15% relationship/program bonus
+- 15% linkage/program bonus
 
-Skill overlap compares explicit extracted skills such as `AI`, `Fintech`, or `Product Management`. Embedding similarity compares the enriched short bio plus skills to catch softer alignment. The relationship/program bonus is awarded when a company is already linked to a program, which increases confidence for company-program and program-company recommendations.
+Skill overlap compares explicit extracted skills such as `AI`, `Fintech`, or `Product Management`. Embedding similarity compares the enriched short bio plus skills to catch softer alignment. The linkage/program bonus is awarded when a company is already linked to a program, which increases confidence for company-program and program-company recommendations.
 
 The MVP includes deterministic hash embeddings so it can run without a paid vector service. The `EmbeddingService` is isolated so it can be swapped for Gemini embeddings or pgvector later.
 
@@ -90,7 +90,7 @@ backend/app/
 
 frontend/
   src/             Vite application entry and SPA router
-  components/      dashboard, entity forms, graph, matches
+  components/      dashboard, entity forms, graph, matches, linkages, profile cards
   lib/             API client and types
 
 infra/
