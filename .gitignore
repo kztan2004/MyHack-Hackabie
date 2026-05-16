@@ -1,96 +1,59 @@
-# ============================================================
-# Environment & Secrets
-# ============================================================
+# Environment and secrets
 .env
 .env.*
 !.env.example
 *.pem
 *.key
-secrets/
 
-# ============================================================
-# Python / FastAPI (Backend)
-# ============================================================
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-*.pyo
-*.pyd
-
-# Virtual environments
+.Python
 .venv/
 venv/
 env/
 ENV/
-
-# Distribution / packaging
-dist/
-build/
-*.egg-info/
-*.egg
-.eggs/
-
-# Testing & coverage
 .pytest_cache/
-.coverage
-coverage.xml
-htmlcov/
-*.log
-
-# MyPy / type checking
 .mypy_cache/
-.dmypy.json
-dmypy.json
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
 
-# ============================================================
-# Node / Vite / React (Frontend)
-# ============================================================
+# Node / Vite
 node_modules/
 dist/
+dist-ssr/
+*.tsbuildinfo
 .vite/
-*.local
 
-# Package manager locks (keep package-lock.json or yarn.lock, not both)
-yarn.lock
+# Legacy Next.js artifacts
+.next/
+out/
 
-# Build output
-frontend/dist/
-frontend/build/
+# Docker and local service data
+postgres-data/
+neo4j-data/
+redis-data/
+*.pid
 
-# ============================================================
-# Docker
-# ============================================================
-# Ignore local override files but keep the main compose file
-docker-compose.override.yml
-*.dockerignore
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# ============================================================
-# Database volumes & data
-# ============================================================
-# Neo4j local data
-neo4j/data/
-neo4j/logs/
-neo4j/import/
-neo4j/plugins/
-
-# PostgreSQL local data
-pgdata/
-postgres_data/
-
-# ============================================================
-# IDE & Editor
-# ============================================================
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# OS and editor files
 .DS_Store
 Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# ============================================================
-# Misc
-# ============================================================
-*.bak
-*.tmp
-.cache/
+# Local generated files
+backend/.coverage
+frontend/coverage/
