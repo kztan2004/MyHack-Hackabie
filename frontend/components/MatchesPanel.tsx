@@ -34,8 +34,8 @@ export function MatchesPanel({ compact = false }: { compact?: boolean }) {
   const visibleMatches = useMemo(() => {
     const expectedType =
       mode === "company" ? (companyView === "mentor" ? "company_mentor" : "company_program") :
-      mode === "program" ? "program_company" :
-      "participant_program";
+        mode === "program" ? "program_company" :
+          "participant_program";
     const sourceType = mode;
     return matches.filter(
       (match) => match.match_type === expectedType && match.source_type === sourceType && match.source_id === selectedId
@@ -100,7 +100,7 @@ export function MatchesPanel({ compact = false }: { compact?: boolean }) {
 
   const targetLabel = mode === "company" ? (companyView === "mentor" ? "Mentor" : "Program") :
     mode === "program" ? "Company" :
-    "Program";
+      "Program";
 
   return (
     <section>
@@ -108,7 +108,7 @@ export function MatchesPanel({ compact = false }: { compact?: boolean }) {
         <div>
           <h1 className={`${compact ? "text-xl" : "text-2xl"} font-semibold text-ink`}>Matches</h1>
           <p className="mt-1 text-sm text-slate-500">
-            {selectedProfile ? selectedProfile.name : `Select a ${mode}`} - {visibleMatches.length} recommendations
+            {selectedProfile ? selectedProfile.name : `Select a ${mode}`}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

@@ -55,9 +55,8 @@ export function Dashboard() {
           );
         })}
       </div>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_430px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)]">
         <GraphCanvas compact />
-        <MatchesPanel compact />
       </div>
       <RelationshipsPanel />
       <EntityWorkspace kind="mentor" />

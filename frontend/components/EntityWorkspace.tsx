@@ -47,6 +47,7 @@ export function EntityWorkspace({ kind }: { kind: EntityKind }) {
   }
 
   useEffect(() => {
+    setCreated(null);
     load().catch((err: unknown) => setError(err instanceof Error ? err.message : "Unable to load profiles"));
   }, [kind]);
 
