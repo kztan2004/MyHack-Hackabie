@@ -64,8 +64,8 @@ export function GraphCanvas({ compact = false }: { compact?: boolean }) {
     // Zoom setup
     const zoomBehavior = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 5])
-      .on("zoom", (event) => {
-        g.attr("transform", event.transform);
+      .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
+        g.attr("transform", event.transform.toString());
       });
 
     zoomRef.current = zoomBehavior;
@@ -206,7 +206,7 @@ export function GraphCanvas({ compact = false }: { compact?: boolean }) {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search node..."
+              placeholder="Filter using the term 'AI'"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="h-10 w-48 rounded-md border border-line bg-white px-3 py-1 text-sm outline-none focus:border-pine"

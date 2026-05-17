@@ -72,6 +72,22 @@ class Neo4jService:
                 score=score,
             )
 
+    async def delete_zero_score_matches(self) -> int:
+        """Remove all match edges with score = 0 left over from skillless pairings."""
+        async with self.driver.session() as session:
+            result = await session.run(
+                """
+                MATCH ()-[r]->()
+                WHERE r.score IS NOT NULL AND r.score = 0
+                WITH r, count(r) AS cnt
+                DELETE r
+                RETURN cnt
+                """
+            )
+            record = await result.single()
+            return record["cnt"] if record else 0
+
+
     async def read_graph(self) -> dict[str, list[dict]]:
         async with self.driver.session() as session:
             nodes_result = await session.run(

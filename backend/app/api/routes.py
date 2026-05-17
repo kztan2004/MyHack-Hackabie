@@ -229,6 +229,9 @@ async def generate_matches(
     graph: Neo4jService | None = Depends(get_graph_service),
     embedding_service: EmbeddingService = Depends(get_embedding_service),
 ) -> list[MatchRead]:
+    # Clean up any stale zero-score edges from before the skillless-link fix.
+    if graph:
+        await graph.delete_zero_score_matches()
     await MatchingService(repository, embedding_service, graph).generate()
     return [MatchRead(**row) for row in await repository.list_matches()]
 

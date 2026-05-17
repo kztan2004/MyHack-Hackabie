@@ -26,7 +26,16 @@ class Settings(BaseSettings):
     admin_password: str = "admin"
     disable_auth: bool = True
 
-    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    # Comma-separated list of allowed CORS origins (read from CORS_ORIGINS env var).
+    # Example: CORS_ORIGINS=https://my-app.vercel.app,http://localhost:3000
+    # Stored as a plain str because pydantic-settings v2 cannot JSON-parse a
+    # bare comma-separated string into list[str]. Use cors_origins_list property.
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Return cors_origins as a list, split on commas."""
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
 
 @lru_cache

@@ -30,6 +30,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      // Bypass ngrok's browser interstitial when the backend is tunnelled via ngrok
+      "ngrok-skip-browser-warning": "true",
       ...(init?.headers ?? {})
     },
     cache: "no-store"

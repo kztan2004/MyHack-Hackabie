@@ -71,7 +71,10 @@ class MatchingService:
                 candidate.shared_skills,
             )
             saved_matches.append(candidate)
-            if self.graph_service:
+            # Only write to the graph when there is at least one shared skill.
+            # Entities with no explicit skills should not appear linked to others
+            # on the graph canvas — they simply have no skill-based connections.
+            if self.graph_service and candidate.shared_skills:
                 await self.graph_service.upsert_match(
                     candidate.source_type,
                     saved.source_id,
